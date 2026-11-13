@@ -52,9 +52,9 @@ fun montarArvore(paginas: List<PaginaNotion>): List<NoPagina> {
 }
 
 data class Modalidades(
-    val topicos: Boolean = true,
-    val resumo: Boolean = true,
-    val assunto: Boolean = true,
+    val topicos: Boolean = false,
+    val resumo: Boolean = false,
+    val assunto: Boolean = false,
     val apresentacao: Boolean = false,
 ) {
     val algumaLigada get() = topicos || resumo || assunto || apresentacao

@@ -1,6 +1,7 @@
 package br.com.korvon.nekonote.dados.fotos
 
 import android.graphics.BitmapFactory
+import android.util.Log
 import br.com.korvon.nekonote.dados.MIN_CARACTERES_LEGIVEL
 import br.com.korvon.nekonote.dados.aguardar
 import com.google.mlkit.vision.common.InputImage
@@ -27,6 +28,7 @@ class PreviaTexto {
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
+            Log.e("NekoOcr", "ML Kit falhou ao analisar a foto", e)
             null
         }
     }

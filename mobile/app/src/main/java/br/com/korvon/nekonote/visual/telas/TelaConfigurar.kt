@@ -108,11 +108,10 @@ class ModeloConfigurar(private val c: ContainerApp) : ViewModel() {
                     return@launch
                 }
                 val paginas = c.api.paginas()
-                val salva = c.prefs.ultimaPagina(idUsuario)
                 _estado.update { s ->
                     s.copy(
                         carregando = false, paginas = paginas,
-                        pagina = s.pagina?.takeIf { p -> paginas.any { it.id == p.id } } ?: paginas.firstOrNull { it.id == salva } ?: paginas.firstOrNull(),
+                        pagina = s.pagina?.takeIf { p -> paginas.any { it.id == p.id } },
                         erro = if (paginas.isEmpty()) "Nenhuma página liberada. Reconecte o Notion e escolha ao menos uma página." else null,
                         precisaConectar = paginas.isEmpty(),
                     )
@@ -133,8 +132,7 @@ class ModeloConfigurar(private val c: ContainerApp) : ViewModel() {
         if (!s.podeConcluir) return false
         val imagens = c.fotos.selecionadas.map { it.arquivo }
         if (imagens.isEmpty()) return false
-        c.prefs.salvarUltimaPagina(idUsuario, s.pagina!!.id)
-        c.pedido = PedidoProcessamento(s.pagina.id, s.modalidades, imagens, s.temperamento)
+        c.pedido = PedidoProcessamento(s.pagina!!.id, s.modalidades, imagens, s.temperamento)
         return true
     }
 }
@@ -159,10 +157,7 @@ fun TelaConfigurar(conteiner: ContainerApp, aoVoltar: () -> Unit, aoAbrirConfigu
                         modifier = Modifier.align(Alignment.CenterEnd).padding(top = 14.dp).size(36.dp).clip(RoundedCornerShape(8.dp)).clickable(onClick = aoAbrirConfiguracoes).padding(4.dp),
                     )
                 }
-                Spacer(Modifier.height(24.dp))
-                Text("Próximo passo", fontFamily = Maven, fontWeight = FontWeight.ExtraBold, fontSize = 28.sp, color = Color.Black)
-                Text("configure sua página", fontFamily = Maven, fontWeight = FontWeight.Medium, fontSize = 16.sp, color = Color.Black)
-                Spacer(Modifier.height(24.dp))
+                Spacer(Modifier.height(32.dp))
 
                 Text("Página de inserção", fontFamily = Maven, fontWeight = FontWeight.Bold, fontSize = 15.sp, color = Color.Black)
                 Spacer(Modifier.height(8.dp))
@@ -177,7 +172,7 @@ fun TelaConfigurar(conteiner: ContainerApp, aoVoltar: () -> Unit, aoAbrirConfigu
                     } else {
                         estado.pagina?.let { IconePagina(it.icone, tamanho = 22.dp) }
                         Text(
-                            estado.pagina?.titulo ?: "nenhuma página",
+                            estado.pagina?.titulo ?: if (estado.paginas.isEmpty()) "nenhuma página" else "escolha uma página",
                             fontSize = 15.sp, color = Color.Black, maxLines = 1, textAlign = TextAlign.Center, modifier = Modifier.weight(1f),
                         )
                     }
@@ -192,11 +187,6 @@ fun TelaConfigurar(conteiner: ContainerApp, aoVoltar: () -> Unit, aoAbrirConfigu
                 }
 
                 Spacer(Modifier.height(24.dp))
-                Text(
-                    "O título e o emoji da página são escolhidos pela IA.",
-                    fontFamily = Maven, fontSize = 14.sp, color = Color(0xFF8A8A8A), modifier = Modifier.fillMaxWidth(),
-                )
-                Spacer(Modifier.height(16.dp))
                 Box(Modifier.fillMaxWidth(0.9f).height(1.dp).background(Color(0xFFDDDDDD)))
                 Spacer(Modifier.height(12.dp))
                 Text("Personalize sua experiência", fontFamily = Maven, fontWeight = FontWeight.SemiBold, fontSize = 16.sp, color = Color.Black)
@@ -211,7 +201,7 @@ fun TelaConfigurar(conteiner: ContainerApp, aoVoltar: () -> Unit, aoAbrirConfigu
                     Opcao("Apresentação", "Roteiro de slides com o que falar em cada um", m.apresentacao) { modelo.modalidades(m.copy(apresentacao = it)) }
                 }
                 if (!estado.modalidades.algumaLigada) {
-                    Text("Ligue ao menos uma opção.", color = Cores.Vermelho, fontSize = 13.sp, modifier = Modifier.padding(top = 8.dp))
+                    Text("Ligue ao menos uma opção.", color = Color(0xFF8A8A8A), fontSize = 13.sp, modifier = Modifier.padding(top = 8.dp))
                 }
 
                 Spacer(Modifier.height(20.dp))
