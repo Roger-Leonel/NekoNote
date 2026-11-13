@@ -66,18 +66,13 @@ enum class Temperamento(val valor: String, val rotulo: String, val emoji: String
     DIVERTIDO("divertido", "Divertido", "😸", "Leve e com personalidade"),
     TECNICO("tecnico", "Técnico", "🛠️", "Termos precisos e mais detalhe"),
     DIDATICO("didatico", "Didático", "🎓", "Explica passo a passo, como numa aula"),
-    ;
-
-    companion object {
-        fun deValor(valor: String?): Temperamento = entries.firstOrNull { it.valor == valor } ?: EQUILIBRADO
-    }
 }
 
 data class PedidoProcessamento(
     val idPagina: String,
     val modalidades: Modalidades,
     val imagens: List<File>,
-    val temperamento: Temperamento = Temperamento.EQUILIBRADO,
+    val temperamento: Temperamento? = null,
 )
 
 sealed interface EventoProcessamento {

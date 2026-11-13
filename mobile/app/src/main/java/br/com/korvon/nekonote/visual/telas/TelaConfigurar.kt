@@ -84,14 +84,14 @@ data class EstadoConfigurar(
     val precisaConectar: Boolean = false,
     val pagina: PaginaNotion? = null,
     val modalidades: Modalidades = Modalidades(),
-    val temperamento: Temperamento = Temperamento.EQUILIBRADO,
+    val temperamento: Temperamento? = null,
 ) {
     val podeConcluir get() = !carregando && pagina != null && modalidades.algumaLigada && !precisaConectar
 }
 
 class ModeloConfigurar(private val c: ContainerApp) : ViewModel() {
     private val idUsuario get() = c.auth.usuario.value?.idUsuario.orEmpty()
-    private val _estado = MutableStateFlow(EstadoConfigurar(temperamento = c.prefs.temperamento(idUsuario)))
+    private val _estado = MutableStateFlow(EstadoConfigurar())
     val estado: StateFlow<EstadoConfigurar> = _estado
 
     init {
@@ -126,7 +126,7 @@ class ModeloConfigurar(private val c: ContainerApp) : ViewModel() {
 
     fun escolherPagina(p: PaginaNotion) = _estado.update { it.copy(pagina = p) }
     fun modalidades(m: Modalidades) = _estado.update { it.copy(modalidades = m) }
-    fun temperamento(t: Temperamento) = _estado.update { it.copy(temperamento = t) }
+    fun temperamento(t: Temperamento?) = _estado.update { it.copy(temperamento = t) }
 
     fun concluir(): Boolean {
         val s = _estado.value
@@ -134,7 +134,6 @@ class ModeloConfigurar(private val c: ContainerApp) : ViewModel() {
         val imagens = c.fotos.selecionadas.map { it.arquivo }
         if (imagens.isEmpty()) return false
         c.prefs.salvarUltimaPagina(idUsuario, s.pagina!!.id)
-        c.prefs.salvarTemperamento(idUsuario, s.temperamento)
         c.pedido = PedidoProcessamento(s.pagina.id, s.modalidades, imagens, s.temperamento)
         return true
     }
@@ -219,7 +218,7 @@ fun TelaConfigurar(conteiner: ContainerApp, aoVoltar: () -> Unit, aoAbrirConfigu
                 SecaoTitulo("Temperamento")
                 Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Temperamento.entries.forEach { t ->
-                        OpcaoTemperamento(t, escolhido = t == estado.temperamento) { modelo.temperamento(t) }
+                        OpcaoTemperamento(t, escolhido = t == estado.temperamento) { modelo.temperamento(if (estado.temperamento == t) null else t) }
                     }
                 }
                 Spacer(Modifier.height(16.dp))

@@ -135,7 +135,7 @@ class ClienteProcessamentoWs(
                     JSONObject().put("topicos", p.modalidades.topicos).put("resumo", p.modalidades.resumo)
                         .put("assunto", p.modalidades.assunto).put("apresentacao", p.modalidades.apresentacao),
                 )
-                .put("temperamento", p.temperamento.valor)
+                .put("temperamento", p.temperamento?.valor ?: JSONObject.NULL)
                 .put("imagens", JSONArray(imagens))
                 .toString()
         }
