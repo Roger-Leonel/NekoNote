@@ -1,0 +1,19 @@
+# Copie para local.properties (não versionado) e preencha.
+sdk.dir=C\:\Users\SEU_USUARIO\AppData\Local\Android\Sdk
+
+# Domínio da API (subdomínio + domínio, o mesmo API_DOMAIN do api/.env). Login, WebSocket e páginas saem dele.
+nekonote.dominio=api.korvon.com.br
+
+# Login com Google (Supabase Auth). ID do cliente OAuth "Web" do Google Cloud (obrigatório).
+google.idClienteWeb=
+
+# Limite de fotos por envio (padrão 20). Use o mesmo valor de MAX_IMAGES da API; a API recusa pedidos acima do limite dela.
+nekonote.maxImagens=20
+
+# Assinatura do APK de release (obrigatória para ./gradlew :app:assembleRelease).
+# Guarde a keystore FORA do repositório e faça backup: sem ela não dá para atualizar o app já instalado.
+# Gerar: keytool -genkeypair -v -keystore nekonote-release.jks -alias nekonote -keyalg RSA -keysize 2048 -validity 10000
+release.keystore=C\:\\Users\\SEU_USUARIO\\chaves\\nekonote-release.jks
+release.storePassword=
+release.keyAlias=nekonote
+release.keyPassword=

@@ -1,0 +1,139 @@
+services:
+  fastapi:
+    container_name: api-ocr
+    build:
+      context: .
+      dockerfile: Dockerfile
+    # so o tunel da Cloudflare (mesma maquina) chega na API. Publicar em 0.0.0.0 deixaria atacar a porta 8000
+    # direto, sem passar pela Cloudflare (WAF, DDoS) e com o IP real escondido do limite de taxa.
+    ports:
+      - "127.0.0.1:8000:8000"
+    # so as variaveis que a API usa (em vez de env_file: .env), para ela nao ver CLOUDFLARE_TOKEN, POSTGRES_PASSWORD etc.
+    environment:
+      API_DOMAIN: ${API_DOMAIN:?defina API_DOMAIN no .env}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4.1-mini}
+      NOTION_CLIENT_ID: ${NOTION_CLIENT_ID}
+      NOTION_CLIENT_SECRET: ${NOTION_CLIENT_SECRET}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      STATE_SECRET: ${STATE_SECRET}
+      JWT_SECRET: ${JWT_SECRET}
+      SUPABASE_URL: ${SUPABASE_URL:-http://rest:3000}
+      SUPABASE_SERVICE_KEY: ${SUPABASE_SERVICE_KEY}
+      PROCESSING_LIMIT_PER_HOUR: ${PROCESSING_LIMIT_PER_HOUR:-10}
+      MAX_IMAGES: ${MAX_IMAGES:-20}
+    depends_on:
+      rest:
+        condition: service_started
+      auth:
+        condition: service_started
+    restart: unless-stopped
+    # sem privilegios extras e sem escrever no disco da imagem (o Tesseract usa /tmp)
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - cloudflare-network
+
+  # --- Supabase auto-hospedado (versão enxuta: banco + Auth + API REST) ---
+  # Guarda os tokens do Notion (tabela usuarios) e faz o login com Google (auth).
+  db:
+    container_name: supabase-db
+    image: supabase/postgres:17.11.0.006
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    ports:
+      - "127.0.0.1:54322:5432"
+    environment:
+      POSTGRES_HOST: /var/run/postgresql
+      PGPORT: 5432
+      POSTGRES_PORT: 5432
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      PGDATABASE: postgres
+      POSTGRES_DB: postgres
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXP: 3600
+    volumes:
+      - supabase_db_data:/var/lib/postgresql/data
+      - ./supabase/99-roles.sql:/docker-entrypoint-initdb.d/init-scripts/99-roles.sql:ro
+      - ./supabase/99-nekonote.sql:/docker-entrypoint-initdb.d/migrations/99-nekonote.sql:ro
+    networks:
+      - cloudflare-network
+
+  # Login com Google (Supabase Auth / GoTrue). Só a API fala com ele; o app chega nele por https://<API_DOMAIN>/auth/v1
+  auth:
+    container_name: supabase-auth
+    image: supabase/gotrue:v2.197.0
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      GOTRUE_API_HOST: 0.0.0.0
+      GOTRUE_API_PORT: 9999
+      API_EXTERNAL_URL: https://${API_DOMAIN}/auth/v1
+      GOTRUE_SITE_URL: https://${API_DOMAIN}
+      GOTRUE_DB_DRIVER: postgres
+      GOTRUE_DB_DATABASE_URL: postgres://supabase_auth_admin:${POSTGRES_PASSWORD}@db:5432/postgres
+      GOTRUE_JWT_SECRET: ${JWT_SECRET}
+      GOTRUE_JWT_EXP: 3600
+      GOTRUE_JWT_AUD: authenticated
+      GOTRUE_JWT_DEFAULT_GROUP_NAME: authenticated
+      GOTRUE_JWT_ADMIN_ROLES: service_role
+      # só Google: sem e-mail/senha, telefone nem contas anônimas
+      GOTRUE_DISABLE_SIGNUP: "false"
+      GOTRUE_EXTERNAL_EMAIL_ENABLED: "false"
+      GOTRUE_EXTERNAL_PHONE_ENABLED: "false"
+      GOTRUE_EXTERNAL_ANONYMOUS_USERS_ENABLED: "false"
+      GOTRUE_MAILER_AUTOCONFIRM: "true"
+      GOTRUE_EXTERNAL_GOOGLE_ENABLED: "true"
+      GOTRUE_EXTERNAL_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOTRUE_EXTERNAL_GOOGLE_SECRET: ${GOOGLE_CLIENT_SECRET}
+      GOTRUE_EXTERNAL_GOOGLE_REDIRECT_URI: https://${API_DOMAIN}/auth/v1/callback
+    networks:
+      - cloudflare-network
+
+  rest:
+    container_name: supabase-rest
+    image: postgrest/postgrest:v16.5
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PGRST_DB_URI: postgres://authenticator:${POSTGRES_PASSWORD}@db:5432/postgres
+      PGRST_DB_SCHEMAS: public
+      PGRST_DB_ANON_ROLE: anon
+      PGRST_JWT_SECRET: ${JWT_SECRET}
+      PGRST_DB_USE_LEGACY_GUCS: "false"
+    networks:
+      - cloudflare-network
+
+  cloudflared:
+    container_name: cloudflare
+    image: cloudflare/cloudflared:latest
+    command: tunnel run --token ${CLOUDFLARE_TOKEN}
+    restart: unless-stopped
+    depends_on:
+      - fastapi
+    # Compartilha a rede da API: dentro do tunel, "localhost:8000" (o servico configurado no painel da Cloudflare)
+    # e a propria API. Funciona igual no Docker Desktop, onde "network_mode: host" nao alcanca o localhost do Windows.
+    # Com isso o tunel tambem enxerga so o que precisa: sem env_file, so o CLOUDFLARE_TOKEN (da linha de comando).
+    network_mode: "service:fastapi"
+
+
+volumes:
+  supabase_db_data:
+
+networks:
+  cloudflare-network:
+    driver: bridge
