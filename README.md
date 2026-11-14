@@ -2,7 +2,7 @@
 
 <img src="assets/icone.png" alt="Ícone do NekoNote" width="120" />
 
-# NekoNote 🐾
+# NekoNote
 
 ### Tire foto. Vire nota.
 
