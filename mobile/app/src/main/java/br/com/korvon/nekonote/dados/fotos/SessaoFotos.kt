@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import java.io.File
 import java.util.UUID
 
@@ -83,7 +84,9 @@ class SessaoFotos(
 
     private fun analisar(foto: Foto) {
         escopo.launch {
-            val legivel = preview.analisar(foto.arquivo)
+            // a prévia só avisa de pouco texto: se o ML Kit falhar ou demorar, não trava a foto girando
+            // (null é "analisando"), considera legível e deixa o OCR do servidor decidir
+            val legivel = withTimeoutOrNull(20_000) { preview.analisar(foto.arquivo) } ?: true
             _fotos.update { lista -> lista.map { if (it.id == foto.id) it.copy(legivel = legivel) else it } }
         }
     }
