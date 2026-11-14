@@ -21,8 +21,8 @@ android {
         applicationId = "br.com.korvon.nekonote"
         minSdk = 26
         targetSdk = 37
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 2
+        versionName = "1.0.1"
 
         // endereco da API: so o dominio (subdominio + dominio, o mesmo API_DOMAIN do api/.env).
         // A API, o WebSocket, as paginas legais e o login (/auth/v1) saem todos dele.
