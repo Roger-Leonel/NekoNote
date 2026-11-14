@@ -48,7 +48,7 @@ Quem estuda a partir de livros, apostilas e slides costuma acabar com dezenas de
 
 O **NekoNote** resolve isso: um app Android que recebe até **20 fotos de uma vez**, lê o texto delas (OCR), pede a uma IA que organize o conteúdo e **cria uma página pronta no Notion do próprio usuário**.
 
-> Projeto acadêmico (TCC) mantido pela **Korvon**. O app é só para Android e ainda não está publicado em loja: a distribuição é por APK.
+> Projeto acadêmico (TCC) feito por **Roger Leonel**. O app é só para Android e ainda não está publicado em loja: a distribuição é por APK.
 
 ## Como funciona
 
@@ -271,7 +271,7 @@ A tabela completa de erros e limites está em [`api/README.md`](api/README.md).
 
 <div align="center">
 
-Feito com 🧡 e muitos 🐾 pela **Korvon**
+Feito com 🧡 e muitos 🐾 por **Roger Leonel**
 
 <img src="assets/galeria/5-ia.png" alt="Carregando suas miaufotos..." width="40%" />
 
