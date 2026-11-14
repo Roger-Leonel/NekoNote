@@ -143,8 +143,8 @@ fun TelaConfigurar(conteiner: ContainerApp, aoVoltar: () -> Unit, aoAbrirConfigu
     val estado by modelo.estado.collectAsState()
     var escolhendo by remember { mutableStateOf(false) }
 
-    val formaCartao = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
-    Box(Modifier.fillMaxSize().background(Cores.Laranja).statusBarsPadding().imePadding().padding(start = 16.dp, end = 16.dp, top = 16.dp)) {
+    val formaCartao = RoundedCornerShape(28.dp)
+    Box(Modifier.fillMaxSize().background(Cores.Laranja).statusBarsPadding().imePadding().navigationBarsPadding().padding(16.dp)) {
         Column(Modifier.fillMaxSize().shadow(8.dp, formaCartao).clip(formaCartao).background(Color.White)) {
             Column(
                 Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp),
@@ -157,10 +157,10 @@ fun TelaConfigurar(conteiner: ContainerApp, aoVoltar: () -> Unit, aoAbrirConfigu
                         modifier = Modifier.align(Alignment.CenterEnd).padding(top = 14.dp).size(36.dp).clip(RoundedCornerShape(8.dp)).clickable(onClick = aoAbrirConfiguracoes).padding(4.dp),
                     )
                 }
-                Spacer(Modifier.height(32.dp))
-
-                Text("Página de inserção", fontFamily = Maven, fontWeight = FontWeight.Bold, fontSize = 15.sp, color = Color.Black)
-                Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(24.dp))
+                Text("Próximo passo", fontFamily = Maven, fontWeight = FontWeight.ExtraBold, fontSize = 28.sp, color = Color.Black)
+                Text("configure sua página", fontFamily = Maven, fontWeight = FontWeight.Medium, fontSize = 16.sp, color = Color.Black)
+                Spacer(Modifier.height(24.dp))
                 Row(
                     Modifier.fillMaxWidth(0.72f).clip(RoundedCornerShape(50)).background(Cores.CinzaCampo)
                         .clickable(enabled = estado.paginas.isNotEmpty()) { escolhendo = true }.padding(horizontal = 16.dp, vertical = 8.dp),
@@ -215,7 +215,7 @@ fun TelaConfigurar(conteiner: ContainerApp, aoVoltar: () -> Unit, aoAbrirConfigu
             }
 
             if (!tecladoAberto()) Box(
-                Modifier.fillMaxWidth().background(if (estado.podeConcluir) Cores.Grafite else Cores.Grafite.copy(alpha = 0.45f)).navigationBarsPadding()
+                Modifier.fillMaxWidth().background(if (estado.podeConcluir) Cores.Grafite else Cores.Grafite.copy(alpha = 0.45f))
                     .clickable(enabled = estado.podeConcluir) { if (modelo.concluir()) aoConcluir() }.padding(vertical = 22.dp),
                 contentAlignment = Alignment.Center,
             ) {
